@@ -1,0 +1,16 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "wdev",
+  "description": "Expert-peer dev mode for coding agents.",
+  "owner": {
+    "name": "Ashraf"
+  },
+  "plugins": [
+    {
+      "name": "wdev",
+      "description": "YAGNI/DRY, plan-first, deliberate subagents, name canary, /handoff and /delegate.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}
