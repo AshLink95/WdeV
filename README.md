@@ -11,7 +11,8 @@ Agentic coding plugin for working with an agent as an expert peer: the agent wri
 
 Currently only works with Claude Code.
 
-- **Rules** (`AGENTS.md`): YAGNI, DRY, modular, review-sized diffs, doc comments over inline comments, follow hand-written code's style, plan first on big work, deliberate subagent use, XP on fresh repos. Injected at session start and into every subagent.
+- **Rules** (`AGENTS.md`): YAGNI, DRY, modular, review-sized diffs, doc comments over inline comments, follow hand-written code's style, plan first on big work, tracked tasks with a stop after each, no git ops unless asked, deliberate subagent use, XP on fresh repos. Injected at session start and into every subagent.
+- **Git guard**: every Bash command that runs git asks for your approval, from the main agent or any subagent.
 - **Canary**: every response starts with your name. A missing name means the rules fell out of context.
 - **`/handoff [focus]`**: writes `.wdev/handoff.md` with only what the next session needs. Run `/clear` after; the new session loads it once and keeps it as `.wdev/handoff.last.md`.
 - **`/delegate`, `/delegate-seq`, `/delegate-par`**: hand prompts to clean-context subagents, each briefed with only what it needs. Chain them in one message:
