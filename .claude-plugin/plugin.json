@@ -1,9 +1,8 @@
 {
   "name": "wdev",
   "version": "0.2.0",
-  "description": "Expert-peer dev mode: YAGNI/DRY, plan-first, deliberate subagent use, name canary, /handoff and /delegate.",
+  "description": "Expert-peer dev mode: YAGNI/DRY, plan-first, deliberate subagent use, name canary, /handoff, /delegate and /review.",
   "author": {
     "name": "Ashraf"
-  },
-  "hooks": "./hooks/hooks.json"
+  }
 }

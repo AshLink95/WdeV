@@ -9,7 +9,7 @@ Arguments: $ARGUMENTS
 
 ## 1. Split into segments
 
-Split the arguments on the markers `/delegate`, `/delegate-seq`, `/delegate-par` (also written with `\` instead of `/`, or with a `wdev:` prefix). The text after a marker, up to the next marker, is one segment's prompt. Each marker sets its segment's mode:
+Split the arguments on the markers `/delegate`, `/delegate-seq`, `/delegate-par` (also written with `\` instead of `/`, or with a `wdev:` prefix). A marker counts only at the start of the arguments or after whitespace, and only when followed by whitespace or the end, so a path like `skills/delegate/SKILL.md` is not a marker. The text after a marker, up to the next marker, is one segment's prompt. Each marker sets its segment's mode:
 
 - `/delegate`: auto
 - `/delegate-seq`: seq

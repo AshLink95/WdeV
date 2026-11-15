@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "wdev",
-      "description": "YAGNI/DRY, plan-first, deliberate subagents, name canary, /handoff and /delegate.",
+      "description": "YAGNI/DRY, plan-first, deliberate subagents, name canary, /handoff, /delegate and /review.",
       "source": "./",
       "category": "productivity"
     }

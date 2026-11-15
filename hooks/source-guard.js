@@ -51,7 +51,7 @@ if (require.main === module) {
   process.stdin.on('data', (c) => { raw += c; });
   process.stdin.on('end', () => {
     try {
-      const out = decide(JSON.parse(raw.replace(/^﻿/, '')));
+      const out = decide(JSON.parse(raw.replace(/^\uFEFF/, '')));
       if (out) process.stdout.write(JSON.stringify(out));
     } catch (e) {
       // Unparseable input: agent unknown, so nothing to guard.

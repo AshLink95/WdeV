@@ -9,9 +9,9 @@
 
 Agentic coding plugin for working with an agent as an expert peer: the agent writes most of the code, you own the engineering.
 
-Currently only works with Claude Code.
+Built for Claude Code. Other agents get the rules only (see [Other agents](#other-agents)).
 
-- **Rules** (`AGENTS.md`): YAGNI, DRY, modular, review-sized diffs, doc comments over inline comments, follow hand-written code's style, plan first on big work, tracked tasks with a stop after each, no git ops unless asked, deliberate subagent use, XP on fresh repos. Injected at session start and into every subagent.
+- **Rules** (`AGENTS.md`): YAGNI, DRY, modular, review-sized diffs, doc comments over inline comments, follow hand-written code's style, plan first on big work, tracked tasks with a stop after each, git only on request, reviews by a panel unless you ask for brief, deliberate subagent use, XP on fresh repos. Injected at session start. Subagents get them minus the main-session-only parts (canary, plans and stops, spawning subagents).
 - **Git guard**: every Bash command that runs git asks for your approval, from the main agent or any subagent.
 - **Canary**: every response starts with your name. A missing name means the rules fell out of context.
 - **`/handoff [focus]`**: writes `.wdev/handoff.md` with only what the next session needs. Run `/clear` after; the new session loads it once and keeps it as `.wdev/handoff.last.md`.
@@ -22,6 +22,7 @@ Currently only works with Claude Code.
   ```
 
   Consecutive par segments run together. A seq segment gets the previous group's output and passes its own to the next group. Plain `/delegate` lets the model choose per segment.
+- **`/review [target] [brief]`**: full review panel. 2-3 clean-context reviewers, each with a different lens, then `judge` settles on one verdict. `brief` shortens only the report. Asking for a review in plain words runs the same panel unless you say brief or quick.
 - **`judge` agent**: settles between independent perspectives.
 - **`physicist` agent**: classical mechanics, E&M, thermo/stat mech, quantum up to quantum information. Works from postulates only. Looks things up only on arXiv, APS, SciPost, Quantum, IOP, DOAJ, INSPIRE and doi.org; a hook blocks every other domain.
 
@@ -34,7 +35,11 @@ Currently only works with Claude Code.
 
 Or try it without installing: `claude --plugin-dir /path/to/WDeV-Plugin`.
 
-Commands are namespaced (`/wdev:handoff`) if another plugin uses the same name.
+Commands are namespaced: `/wdev:handoff`, `/wdev:review`.
+
+## Other agents
+
+Copy `AGENTS.md` into your project root, or into the agent's global rules file. Add `User name: <your name>` at the top for the canary. Hooks and commands are Claude Code only: no git guard, physicist source allowlist, handoff loading, or slash commands.
 
 ## Config
 

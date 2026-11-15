@@ -6,8 +6,8 @@
  * in AGENTS.md: the agent only runs git when asked, and the user approves each call.
  */
 
-/** `git` as a command word: bare, after a separator, or as a path like `/usr/bin/git`. */
-const GIT = /(^|[^\w.-])git(\s|$)/m;
+/** `git` as a command word: bare, quoted, next to a shell operator, or as a path like `/usr/bin/git`. */
+const GIT = /(^|[^\w.-])git(\.exe)?(?![\w./-])/m;
 
 /**
  * Hook output for one PreToolUse payload, or null to let the call through untouched.
@@ -28,7 +28,7 @@ if (require.main === module) {
   process.stdin.on('data', (c) => { raw += c; });
   process.stdin.on('end', () => {
     try {
-      const out = decide(JSON.parse(raw.replace(/^﻿/, '')));
+      const out = decide(JSON.parse(raw.replace(/^\uFEFF/, '')));
       if (out) process.stdout.write(JSON.stringify(out));
     } catch (e) {
       // Unparseable input: no command to inspect, defer to normal permissions.

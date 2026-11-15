@@ -5,7 +5,8 @@
  *
  * session:  injects AGENTS.md with the user's name for the canary, plus a
  *           pending `.wdev/handoff.md` on startup/clear (consumed once).
- * subagent: injects AGENTS.md without the canary; SessionStart context never
+ * subagent: injects AGENTS.md minus the main-session-only sections (canary,
+ *           plans and stops, spawning subagents); SessionStart context never
  *           reaches subagents.
  */
 
@@ -15,6 +16,9 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 
 const RULES_PATH = path.join(__dirname, '..', 'AGENTS.md');
+
+/** AGENTS.md sections a subagent can't follow: it has no user to talk to and must not fan out. */
+const MAIN_ONLY = /^## (Response|Plan first|Subagents)\r?\n[\s\S]*?(?=^## |(?![\s\S]))/gm;
 
 /**
  * User name for the canary: WDEV_NAME, then wdev config.json `name`, then git user.name.
@@ -58,7 +62,7 @@ function takeHandoff(cwd) {
  */
 function buildContext(event, input) {
   const rules = fs.readFileSync(RULES_PATH, 'utf8');
-  if (event === 'subagent') return rules.replace(/^## Response\n[\s\S]*?(?=^## )/m, '');
+  if (event === 'subagent') return rules.replace(MAIN_ONLY, '');
 
   const name = resolveName();
   let out = (name
@@ -78,7 +82,7 @@ if (require.main === module) {
   process.stdin.on('end', () => {
     try {
       let input = {};
-      try { input = JSON.parse(raw.replace(/^﻿/, '')); } catch (e) {}
+      try { input = JSON.parse(raw.replace(/^\uFEFF/, '')); } catch (e) {}
       const hookEventName = event === 'subagent' ? 'SubagentStart' : 'SessionStart';
       process.stdout.write(JSON.stringify({
         hookSpecificOutput: { hookEventName, additionalContext: buildContext(event, input) },

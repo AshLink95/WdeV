@@ -47,10 +47,11 @@ test('handoff is injected once on clear, then kept as handoff.last.md', () => {
   assert.strictEqual(fs.readFileSync(path.join(cwd, '.wdev', 'handoff.last.md'), 'utf8'), 'NEXT: ship it');
 });
 
-test('subagent gets the rules without the canary', () => {
+test('subagent gets the rules without the main-session-only sections', () => {
   const ctx = run('subagent', {});
-  assert.doesNotMatch(ctx, /Canary|User name|Exactly!/);
-  assert.match(run('session', {}, { WDEV_NAME: 'X' }), /Exactly!/);
+  assert.doesNotMatch(ctx, /Canary|User name|Exactly!|## Plan first|stop and ask|## Subagents|judge/);
+  assert.match(run('session', {}, { WDEV_NAME: 'X' }), /Exactly![\s\S]*## Plan first[\s\S]*## Subagents/);
   assert.match(ctx, /## Code/);
-  assert.match(ctx, /## Subagents/);
+  assert.match(ctx, /## Docs/);
+  assert.match(ctx, /## Git/);
 });
