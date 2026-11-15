@@ -1,4 +1,11 @@
-# WdeV
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/logo.png">
+    <img src="assets/logo.png" width="240" alt="WdeV, the chill expert peer">
+  </picture>
+</p>
+
+# <div align=center> WdeV </div>
 
 Agentic coding plugin for working with an agent as an expert peer: the agent writes most of the code, you own the engineering.
 
