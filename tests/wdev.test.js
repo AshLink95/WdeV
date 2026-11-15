@@ -49,7 +49,8 @@ test('handoff is injected once on clear, then kept as handoff.last.md', () => {
 
 test('subagent gets the rules without the canary', () => {
   const ctx = run('subagent', {});
-  assert.doesNotMatch(ctx, /Canary|User name/);
+  assert.doesNotMatch(ctx, /Canary|User name|Exactly!/);
+  assert.match(run('session', {}, { WDEV_NAME: 'X' }), /Exactly!/);
   assert.match(ctx, /## Code/);
   assert.match(ctx, /## Subagents/);
 });
