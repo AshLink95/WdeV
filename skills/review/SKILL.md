@@ -1,12 +1,12 @@
 ---
 name: review
 description: Full review panel. 2-3 clean-context reviewers, each with a different lens, then the judge agent settles on one verdict. Use when the user invokes /review, or asks to review, evaluate, or give an opinion without asking for a brief or quick take.
-argument-hint: "[target] [brief]"
+argument-hint: "[target] [short]"
 ---
 
 Arguments: $ARGUMENTS
 
-Always run the full panel. "brief" or "summary" in the arguments shortens only the final report. A brief review without the panel is a plain chat answer, not this command.
+Always run the full panel. `short` in the arguments shortens only the final report. If the user asked in plain words for a brief or quick review, don't use this skill: answer inline.
 
 ## 1. Scope
 
@@ -31,6 +31,6 @@ Send `judge` the target and every reviewer's findings. Ask for: MUST FIX, SHOULD
 
 ## 5. Report
 
-Verdict first, then MUST FIX and SHOULD FIX items, then a count of skipped items. Brief: the verdict and MUST FIX items only, a few lines.
+Verdict first, then MUST FIX and SHOULD FIX items, then a count of skipped items. Short: the verdict and MUST FIX items only, a few lines.
 
 Change nothing until the user says which fixes to apply.

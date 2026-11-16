@@ -7,6 +7,8 @@ disable-model-invocation: true
 
 Arguments: $ARGUMENTS
 
+Invoking this is the go for every picked task: it overrides the stop after each task. Stop once, after the report.
+
 ## 1. Pick tasks
 
 Read the task list (`TaskList`). Take pending tasks with no unfinished blockers. Skip the rest, and name the skipped ones in the report.

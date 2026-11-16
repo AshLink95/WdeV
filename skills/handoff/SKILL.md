@@ -5,7 +5,7 @@ argument-hint: "[focus of the next session]"
 disable-model-invocation: true
 ---
 
-Write `.wdev/handoff.md` in the project root, then stop.
+Write `.wdev/handoff.md` in the directory Claude Code was started in, then stop.
 
 Next session focus: $ARGUMENTS (if empty, infer it from the current task).
 

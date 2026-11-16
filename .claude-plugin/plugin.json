@@ -1,7 +1,7 @@
 {
   "name": "wdev",
   "version": "0.4.0",
-  "description": "Expert-peer dev mode: YAGNI/DRY, plan-first, deliberate subagent use, name canary, /handoff, /delegate, /delegate-par-tasks and /review.",
+  "description": "Expert-peer dev mode: rules, plan hook, git guard, usage bar, /wdev:handoff, /wdev:delegate, /wdev:review panel, judge and physicist agents.",
   "types": "./types/index.d.ts",
   "author": {
     "name": "Ashraf"
