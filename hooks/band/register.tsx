@@ -52,15 +52,16 @@ export const register: Register = on => {
   })
 
   // Both skip a subagent's calls (agentId set): its tasks are its own list, not the main session's.
+  // They only observe, so their .catch hands back the tool's own result instead of refusing it.
   on('tool.call', { tool: 'TaskCreate' }, async ($, e, next) => {
     const ran = await next(e)
-    if (e.agentId === undefined && ran.result !== undefined && !ran.isError) {
-      const { id } = ran.result.task
+    const id = ran.result?.task?.id
+    if (e.agentId === undefined && id !== undefined && !ran.isError) {
       await update($, tasks, list => ({ ...list, [id]: { subject: e.subject, status: 'pending' } }))
     }
 
     return ran
-  })
+  }).catch(($, e, next) => next(e))
 
   on('tool.call', { tool: 'TaskUpdate' }, async ($, e, next) => {
     const ran = await next(e)
@@ -73,7 +74,7 @@ export const register: Register = on => {
     }
 
     return ran
-  })
+  }).catch(($, e, next) => next(e))
 
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
     const now = await read($, usage)
@@ -84,7 +85,11 @@ export const register: Register = on => {
     const done = list.filter(([, task]) => task.status === 'completed').length
     const toggle = (to: View) => () => update($, view, v => (v === to ? 'none' : to))
     const lines =
-      open === 'details' ? details(now) : open === 'tasks' ? list.map(([id, task]) => `#${id} ${task.status} ${task.subject}`) : []
+      open === 'details'
+        ? details(now).map(line => [line, line])
+        : open === 'tasks'
+          ? list.map(([id, task]) => [id, `#${id} ${task.status} ${task.subject}`])
+          : []
 
     const { Box, Button, Text } = $.ui.resolve(e)
     // bodyColumns counts terminal cells; a graphical surface draws Buttons wider than their cells, so a row sized to it wraps there.
@@ -102,8 +107,10 @@ export const register: Register = on => {
           {list.length > 0 && <Button key="tasks" plain label={`Tasks ${done}/${list.length}`} onPress={toggle('tasks')} />}
           <Button key="details" plain label="Details" onPress={toggle('details')} />
         </Box>
-        {lines.map(line => (
-          <Text dimColor>{line}</Text>
+        {lines.map(([key, line]) => (
+          <Text key={key} dimColor>
+            {line}
+          </Text>
         ))}
       </Box>
     )

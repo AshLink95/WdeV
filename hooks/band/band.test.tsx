@@ -90,3 +90,16 @@ test('TaskCreate and TaskUpdate move the counter', async ($, on) => {
   expect(await ui.find({ type: 'Text', text: /^#3/ })).toBeUndefined()
   await ui.unmount()
 })
+
+test('a TaskCreate result without a task leaves the list alone', async ($, on) => {
+  on('session.usage', () => ({ value: USAGE }))
+  on('tool.call', () => ({ result: {} as never }))
+  on('session.measure', (_, e) => ({ changed: e.changed }))
+  await $.session.measure({ ...USAGE, changed: ['context'] })
+  const ran = await $.tool.call({ tool: 'TaskCreate', subject: 'a', description: '' })
+  expect(ran.result).toEqual({})
+
+  const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
+  expect(await ui.find({ key: 'tasks' })).toBeUndefined()
+  await ui.unmount()
+})
