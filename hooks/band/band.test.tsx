@@ -84,7 +84,7 @@ test('TaskCreate and TaskUpdate move the counter', async ($, on) => {
   await $.tool.call({ tool: 'TaskUpdate', taskId: '2', status: 'in_progress', subject: 'b2' })
 
   const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
-  expect((await ui.find({ key: 'tasks' }))?.text).toBe('Tasks 1/2')
+  expect((await ui.find({ key: 'tasks' }))?.text).toBe('Tasks 1/2 50%')
   await ui.press({ key: 'tasks' })
   expect((await ui.find({ type: 'Text', text: /^#2/ }))?.text).toBe('#2 in_progress b2')
   expect(await ui.find({ type: 'Text', text: /^#3/ })).toBeUndefined()
@@ -102,4 +102,36 @@ test('a TaskCreate result without a task leaves the list alone', async ($, on) =
   const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
   expect(await ui.find({ key: 'tasks' })).toBeUndefined()
   await ui.unmount()
+})
+
+test('spawned agents show with their completion, ended by their last turn', async ($, on) => {
+  let id = 0
+  on('session.usage', () => ({ value: USAGE }))
+  on('agent.spawn', () => ({ model: 'opus', agentId: `a${++id}` }))
+  on('turn.start', (_, e) => ({ turnId: e.turnId }))
+  on('turn.complete', (_, e) => ({ text: e.answer }))
+  on('session.measure', (_, e) => ({ changed: e.changed }))
+  await $.session.measure({ ...USAGE, changed: ['context'] })
+  const turn = { answer: '', durationMs: 1, isAborted: false, turnId: 't' }
+  const spawn = { prompt: 'p', tool_use_id: 'u', provider: { plugin: 'engine', tier: 'builtin' }, parentModel: 'opus', background: true, fork: false } as const
+
+  await $.agent.spawn({ ...spawn, description: 'audit hooks', subagentType: 'Explore' })
+  await $.agent.spawn({ ...spawn, description: 'audit skills', subagentType: 'general-purpose' })
+  await $.agent.spawn({ ...spawn, description: 'audit evals', subagentType: 'general-purpose' })
+  await $.turn.complete({ ...turn, agentId: 'a1', reason: 'answer' })
+  await $.turn.complete({ ...turn, agentId: 'a2', reason: 'aborted', isAborted: true })
+  await $.turn.complete({ ...turn, agentId: 'a3', reason: 'error' })
+  await $.turn.start({ text: 'more', turnId: 't2', agentId: 'a3' })
+  await $.turn.complete({ ...turn, reason: 'answer' })
+
+  for (const surface of SURFACES) {
+    const ui = await $.ui.mount({ ...BAND, surface })
+    expect((await ui.find({ key: 'agents' }))?.text).toBe('Agents 2/3 67%')
+    await ui.press({ key: 'agents' })
+    expect((await ui.find({ type: 'Text', text: /hooks$/ }))?.text).toBe('Explore completed audit hooks')
+    expect((await ui.find({ type: 'Text', text: /skills$/ }))?.text).toBe('general-purpose killed audit skills')
+    expect((await ui.find({ type: 'Text', text: /evals$/ }))?.text).toBe('general-purpose running audit evals')
+    await ui.press({ key: 'agents' })
+    await ui.unmount()
+  }
 })
