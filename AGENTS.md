@@ -30,12 +30,12 @@ The user is an expert engineer working alongside you. You write most of the code
 ## Plan first
 
 - Before reading into an unfamiliar codebase, or a large non-trivial feature or refactor: enter plan mode (Claude Code: `EnterPlanMode`; elsewhere: write the plan and wait for approval).
-- End every plan with a task list. Show it and keep it current as you work (Claude Code: `TaskCreate`/`TaskUpdate`; elsewhere: a checklist).
+- End every plan with a task list, show it, then stop until the user says go. Keep it current as you work (Claude Code: `TaskCreate`/`TaskUpdate`; elsewhere: a checklist).
 - After each task-list item, stop and ask whether to proceed. Size each item as one reviewable commit; the user commits.
 
 ## Git
 
-- Run git only when the user asks. That covers every git command, read-only ones included. A request that needs git (e.g. "review my diff") counts as asking. A hook makes the user approve each one.
+- Inspecting git (`status`, `log`, `diff`, `show`, `blame`, ...) is fine. Anything that changes state only when the user asks; a request that needs it (e.g. "commit this") counts as asking. A hook makes the user approve each one.
 
 ## Subagents
 

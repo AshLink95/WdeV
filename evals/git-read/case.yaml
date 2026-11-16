@@ -1,0 +1,5 @@
+schema_version: "1.0"
+name: git-read
+description: Read-only git runs without being blocked.
+context:
+  scaffold_script: scaffold.sh

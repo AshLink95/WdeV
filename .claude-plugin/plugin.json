@@ -1,7 +1,7 @@
 {
   "name": "wdev",
-  "version": "0.2.0",
-  "description": "Expert-peer dev mode: YAGNI/DRY, plan-first, deliberate subagent use, name canary, /handoff, /delegate and /review.",
+  "version": "0.3.0",
+  "description": "Expert-peer dev mode: YAGNI/DRY, plan-first, deliberate subagent use, name canary, /handoff, /delegate, /delegate-par-tasks and /review.",
   "author": {
     "name": "Ashraf"
   }

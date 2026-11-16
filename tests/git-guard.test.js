@@ -4,22 +4,30 @@ const { decide } = require('../hooks/git-guard');
 
 const asks = (command) => decide({ tool_name: 'Bash', tool_input: { command } })?.hookSpecificOutput.permissionDecision === 'ask';
 
-test('every git command needs approval', () => {
-  assert.ok(asks('git status'));
+test('read-only git runs freely', () => {
+  assert.strictEqual(decide({ tool_input: { command: 'git status' } }), null);
+  assert.strictEqual(decide({ tool_input: { command: 'git -C x log' } }), null);
+  assert.strictEqual(decide({ tool_input: { command: 'git --no-pager diff' } }), null);
+  assert.strictEqual(decide({ tool_input: { command: '"git" log' } }), null);
+  assert.strictEqual(decide({ tool_input: { command: 'git log | head' } }), null);
+  assert.strictEqual(decide({ tool_input: { command: 'git diff && git status' } }), null);
+  assert.strictEqual(decide({ tool_input: { command: 'cd repo && git log --oneline' } }), null);
+});
+
+test('state-changing or unrecognised git needs approval', () => {
+  assert.ok(asks('git commit -m x'));
+  assert.ok(asks('git push'));
+  assert.ok(asks('git add .'));
+  assert.ok(asks('ls; git reset --hard'));
+  assert.ok(asks('git log && git push'));
+  assert.ok(asks('git -c core.pager=x log'));
   assert.ok(asks('git'));
-  assert.ok(asks('cd repo && git log --oneline'));
-  assert.ok(asks('ls; git push'));
-  assert.ok(asks('echo $(git rev-parse HEAD)'));
-  assert.ok(asks('/usr/bin/git diff'));
-  assert.ok(asks('ls\ngit commit -m x'));
-  assert.ok(asks('"git" status'));
+  assert.ok(asks('/usr/bin/git checkout x'));
+  assert.ok(asks('sh -c "git stash"'));
+  assert.ok(asks('git.exe push'));
   assert.ok(asks("'git' push"));
   assert.ok(asks('git;ls'));
-  assert.ok(asks('git&&ls'));
-  assert.ok(asks('git|cat'));
-  assert.ok(asks('$(git)'));
-  assert.ok(asks('git.exe status'));
-  assert.ok(asks('sh -c "git fetch"'));
+  assert.ok(asks('$(git rev-parse HEAD) && git tag v1'));
 });
 
 test('non-git commands are untouched', () => {

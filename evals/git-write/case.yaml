@@ -1,0 +1,5 @@
+schema_version: "1.0"
+name: git-write
+description: A requested commit is still stopped by the git guard (headless ask = deny).
+context:
+  scaffold_script: scaffold.sh

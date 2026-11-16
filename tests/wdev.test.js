@@ -6,6 +6,7 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 
 const HOOK = path.join(__dirname, '..', 'hooks', 'wdev.js');
+const { HOOK_EVENTS } = require(HOOK);
 
 /** Runs the hook as Claude Code would and returns its additionalContext. */
 function run(event, input, env = {}) {
@@ -15,7 +16,7 @@ function run(event, input, env = {}) {
     encoding: 'utf8',
   });
   const { hookSpecificOutput } = JSON.parse(out);
-  assert.strictEqual(hookSpecificOutput.hookEventName, event === 'subagent' ? 'SubagentStart' : 'SessionStart');
+  assert.strictEqual(hookSpecificOutput.hookEventName, HOOK_EVENTS[event]);
   return hookSpecificOutput.additionalContext;
 }
 
@@ -54,4 +55,10 @@ test('subagent gets the rules without the main-session-only sections', () => {
   assert.match(ctx, /## Code/);
   assert.match(ctx, /## Docs/);
   assert.match(ctx, /## Git/);
+});
+
+test('plan approval asks for the task list, then a stop', () => {
+  const ctx = run('plan', {});
+  assert.match(ctx, /TaskCreate/);
+  assert.match(ctx, /stop/);
 });

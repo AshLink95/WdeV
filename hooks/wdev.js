@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 // @ts-check
 /**
- * wdev hook. Usage: `node wdev.js session|subagent`, hook JSON on stdin.
+ * wdev hook. Usage: `node wdev.js session|subagent|plan`, hook JSON on stdin.
  *
  * session:  injects AGENTS.md with the user's name for the canary, plus a
  *           pending `.wdev/handoff.md` on startup/clear (consumed once).
  * subagent: injects AGENTS.md minus the main-session-only sections (canary,
  *           plans and stops, spawning subagents); SessionStart context never
  *           reaches subagents.
+ * plan:     after ExitPlanMode, tells the agent to create the task list, then stop.
  */
 
 const fs = require('fs');
@@ -19,6 +20,9 @@ const RULES_PATH = path.join(__dirname, '..', 'AGENTS.md');
 
 /** AGENTS.md sections a subagent can't follow: it has no user to talk to and must not fan out. */
 const MAIN_ONLY = /^## (Response|Plan first|Subagents)\r?\n[\s\S]*?(?=^## |(?![\s\S]))/gm;
+
+/** Claude Code hookEventName per CLI event. */
+const HOOK_EVENTS = { session: 'SessionStart', subagent: 'SubagentStart', plan: 'PostToolUse' };
 
 /**
  * User name for the canary: WDEV_NAME, then wdev config.json `name`, then git user.name.
@@ -56,11 +60,12 @@ function takeHandoff(cwd) {
 
 /**
  * Builds the additionalContext string for a hook event from its stdin payload.
- * @param {string} event `session` or `subagent`
+ * @param {string} event `session`, `subagent` or `plan`
  * @param {{source?: string, cwd?: string}} input
  * @returns {string}
  */
 function buildContext(event, input) {
+  if (event === 'plan') return 'Plan approved. Before any other work: create the plan\'s task list with `TaskCreate` (one item per reviewable commit) and show it. Then stop and wait for the user to say go.';
   const rules = fs.readFileSync(RULES_PATH, 'utf8');
   if (event === 'subagent') return rules.replace(MAIN_ONLY, '');
 
@@ -83,7 +88,7 @@ if (require.main === module) {
     try {
       let input = {};
       try { input = JSON.parse(raw.replace(/^\uFEFF/, '')); } catch (e) {}
-      const hookEventName = event === 'subagent' ? 'SubagentStart' : 'SessionStart';
+      const hookEventName = HOOK_EVENTS[event];
       process.stdout.write(JSON.stringify({
         hookSpecificOutput: { hookEventName, additionalContext: buildContext(event, input) },
       }));
@@ -93,4 +98,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { buildContext, resolveName, takeHandoff };
+module.exports = { HOOK_EVENTS, buildContext, resolveName, takeHandoff };

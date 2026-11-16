@@ -1,0 +1,5 @@
+schema_version: "1.0"
+name: canary
+description: Main-session reply opens with the user's name.
+context:
+  scaffold_script: scaffold.sh

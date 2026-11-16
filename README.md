@@ -11,8 +11,9 @@ Agentic coding plugin for working with an agent as an expert peer: the agent wri
 
 Built for Claude Code. Other agents get the rules only (see [Other agents](#other-agents)).
 
-- **Rules** (`AGENTS.md`): YAGNI, DRY, modular, review-sized diffs, doc comments over inline comments, follow hand-written code's style, plan first on big work, tracked tasks with a stop after each, git only on request, reviews by a panel unless you ask for brief, deliberate subagent use, XP on fresh repos. Injected at session start. Subagents get them minus the main-session-only parts (canary, plans and stops, spawning subagents).
-- **Git guard**: every Bash command that runs git asks for your approval, from the main agent or any subagent.
+- **Rules** (`AGENTS.md`): YAGNI, DRY, modular, review-sized diffs, doc comments over inline comments, follow hand-written code's style, plan first on big work, a task list and a stop after each plan and each task, state-changing git only on request, reviews by a panel unless you ask for brief, deliberate subagent use, XP on fresh repos. Injected at session start. Subagents get them minus the main-session-only parts (canary, plans and stops, spawning subagents).
+- **Plan hook**: approving a plan makes the agent create its task list, show it, and wait for your go.
+- **Git guard**: git that changes state asks for your approval, from the main agent or any subagent. Inspecting (`status`, `log`, `diff`, `show`, `blame`, `shortlog`, `ls-files`, `grep`, `rev-parse`, `describe`) runs freely.
 - **Canary**: every response starts with your name. A missing name means the rules fell out of context.
 - **`/handoff [focus]`**: writes `.wdev/handoff.md` with only what the next session needs. Run `/clear` after; the new session loads it once and keeps it as `.wdev/handoff.last.md`.
 - **`/delegate`, `/delegate-seq`, `/delegate-par`**: hand prompts to clean-context subagents, each briefed with only what it needs. Chain them in one message:
@@ -22,6 +23,7 @@ Built for Claude Code. Other agents get the rules only (see [Other agents](#othe
   ```
 
   Consecutive par segments run together. A seq segment gets the previous group's output and passes its own to the next group. Plain `/delegate` lets the model choose per segment.
+- **`/delegate-par-tasks [instructions]`**: runs every open task from the task list in parallel, one worker per task. Workers don't commit; ask afterwards and each task gets its own commit with only its files.
 - **`/review [target] [brief]`**: full review panel. 2-3 clean-context reviewers, each with a different lens, then `judge` settles on one verdict. `brief` shortens only the report. Asking for a review in plain words runs the same panel unless you say brief or quick.
 - **`judge` agent**: settles between independent perspectives.
 - **`physicist` agent**: classical mechanics, E&M, thermo/stat mech, quantum up to quantum information. Works from postulates only. Looks things up only on arXiv, APS, SciPost, Quantum, IOP, DOAJ, INSPIRE and doi.org; a hook blocks every other domain.
@@ -58,3 +60,9 @@ node --test tests/
 ```
 
 Requires Node on `PATH`.
+
+Benchmark (with vs without the plugin; costs API usage, 5 cases × 2 arms):
+
+```
+claude plugin eval . --scaffold --runs 1 --max-cost-usd 3 --no-publish --allow-tools "Bash(git:*)"
+```

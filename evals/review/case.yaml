@@ -1,0 +1,5 @@
+schema_version: "1.0"
+name: review
+description: A plain review request runs the subagent panel and the judge.
+context:
+  scaffold_script: scaffold.sh
