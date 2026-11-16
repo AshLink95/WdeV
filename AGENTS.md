@@ -35,7 +35,7 @@ The user is an expert engineer working alongside you. You write most of the code
 
 ## Git
 
-- Inspecting git (`status`, `log`, `diff`, `show`, `blame`, ...) is fine. Anything that changes state only when the user asks; a request that needs it (e.g. "commit this") counts as asking. A hook makes the user approve each one.
+- Inspecting git (`status`, `log`, `diff`, `show`, `blame`, ...) is fine. Anything that changes state only when the user asks; a request that needs it (e.g. "commit this") counts as asking. A hook makes the user approve commits, resets, adds, pushes, pulls, stashes and branch changes, unless their message spelled out the git command.
 
 ## Subagents
 
