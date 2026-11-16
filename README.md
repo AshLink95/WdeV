@@ -14,6 +14,7 @@ Built for Claude Code. Other agents get the rules only (see [Other agents](#othe
 - **Rules** (`AGENTS.md`): YAGNI, DRY, modular, review-sized diffs, doc comments over inline comments, follow hand-written code's style, plan first on big work, a task list and a stop after each plan and each task, state-changing git only on request, reviews by a panel unless you ask for brief, deliberate subagent use, XP on fresh repos. Injected at session start. Subagents get them minus the main-session-only parts (canary, plans and stops, spawning subagents).
 - **Plan hook**: approving a plan makes the agent create its task list, show it, and wait for your go.
 - **Git guard**: git that changes state asks for your approval, from the main agent or any subagent. Inspecting (`status`, `log`, `diff`, `show`, `blame`, `shortlog`, `ls-files`, `grep`, `rev-parse`, `describe`) runs freely.
+- **Bar**: a one-line row above the prompt showing context % used, tokens, and 5h/7d rate-limit %. **Review** runs `/wdev:review`, **Tasks n/m** expands the task list, **Details** expands tokens/window, limit reset times and session cost.
 - **Canary**: every response starts with your name. A missing name means the rules fell out of context.
 - **`/handoff [focus]`**: writes `.wdev/handoff.md` with only what the next session needs. Run `/clear` after; the new session loads it once and keeps it as `.wdev/handoff.last.md`.
 - **`/delegate`, `/delegate-seq`, `/delegate-par`**: hand prompts to clean-context subagents, each briefed with only what it needs. Chain them in one message:
