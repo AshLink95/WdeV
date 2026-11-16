@@ -48,6 +48,18 @@ test('handoff is injected once on clear, then kept as handoff.last.md', () => {
   assert.strictEqual(fs.readFileSync(path.join(cwd, '.wdev', 'handoff.last.md'), 'utf8'), 'NEXT: ship it');
 });
 
+test('symlinked handoff is neither injected nor renamed', () => {
+  const cwd = tmp();
+  fs.mkdirSync(path.join(cwd, '.wdev'));
+  const secret = path.join(tmp(), 'id_ed25519');
+  fs.writeFileSync(secret, 'PRIVATE KEY');
+  fs.symlinkSync(secret, path.join(cwd, '.wdev', 'handoff.md'));
+
+  assert.doesNotMatch(run('session', { source: 'startup', cwd }, { WDEV_NAME: 'X' }), /HANDOFF|PRIVATE KEY/);
+  assert.ok(fs.lstatSync(path.join(cwd, '.wdev', 'handoff.md')).isSymbolicLink());
+  assert.ok(!fs.existsSync(path.join(cwd, '.wdev', 'handoff.last.md')));
+});
+
 test('subagent gets the rules without the main-session-only sections', () => {
   const ctx = run('subagent', {});
   assert.doesNotMatch(ctx, /Canary|User name|Exactly!|## Plan first|stop and ask|## Subagents|judge/);

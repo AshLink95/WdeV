@@ -44,12 +44,14 @@ function resolveName() {
 
 /**
  * Returns the pending handoff text and renames it to handoff.last.md.
+ * Only a regular file counts: a cloned repo could ship a symlink to a secret.
  * @param {string} cwd project root
  * @returns {string | null} null if no handoff is pending
  */
 function takeHandoff(cwd) {
   const file = path.join(cwd, '.wdev', 'handoff.md');
   try {
+    if (!fs.lstatSync(file).isFile()) return null;
     const text = fs.readFileSync(file, 'utf8');
     fs.renameSync(file, path.join(cwd, '.wdev', 'handoff.last.md'));
     return text;
