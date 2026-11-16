@@ -14,7 +14,8 @@ Built for Claude Code. Other agents get the rules only (see [Other agents](#othe
 - **Rules** (`AGENTS.md`): chill peer tone that reads you charitably and confirms or corrects your explain-backs, YAGNI, DRY, modular, review-sized diffs, doc comments over inline comments, follow hand-written code's style, docs both descriptive and concise, plan first on big work, a task list and a stop after each plan and each task, state-changing git only on request, reviews by a panel unless you ask for a brief or quick take, deliberate subagent use, XP on fresh repos. Injected at session start. Subagents get them minus the Response, Plan first and Subagents sections.
 - **Plan hook**: approving a plan makes the agent create its task list, show it, and wait for your go.
 - **Git guard**: `commit`, `reset`, `add`, `push`, `pull`, `stash`, and branch changes (`branch <name>`/`-d`/`-m`, `checkout`, `switch`, `merge`, `rebase`) ask for your approval, from the main agent or any subagent. Everything else runs freely, including listing branches and stashes. A git command your message spells out (`git push`) runs without asking until your next message.
-- **Bar**: a one-line row above the prompt showing context % used, tokens, and 5h/7d rate-limit %. **Review** runs `/wdev:review` on the conversation's current target, **Tasks n/m %** (once the main session has tasks) expands the task list, **Agents n/m %** (once a subagent spawns) expands the subagents with their status, **Details** expands tokens/window, limit reset times and session cost.
+- **Bar**: a one-line row above the prompt showing context % used, tokens, and 5h/7d rate-limit %. **Review** runs `/wdev:review` on the conversation's current target, **Tasks n/m %** (once the main session has tasks) expands the task list, **Agents n/m %** (once a subagent spawns) expands the subagents, each line with its status and %, **Details** expands tokens/window, limit reset times and session cost.
+- **Progress**: the model reports how far a task or a subagent is through a `progress` tool the bar registers, as a rule in `AGENTS.md` tells it. Until it does, a task shows 0/50/100% by status and an agent its own tasks done.
 - **Canary**: every response starts with your name. A missing name means the rules fell out of context.
 - **`/wdev:handoff [focus]`**: writes `.wdev/handoff.md` with only what the next session needs. Run `/clear` after; the new session loads it once and keeps it as `.wdev/handoff.last.md`.
 - **`/wdev:delegate`, `/wdev:delegate-seq`, `/wdev:delegate-par`**: hand prompts to clean-context subagents, each briefed with only what it needs. Chain them in one message:
@@ -44,7 +45,7 @@ Requires Node on `PATH`: every hook runs on Node. Without it the rules, canary, 
 
 ## Other agents
 
-Copy `AGENTS.md` into your project root, or into the agent's global rules file. Add `User name: <your name>` at the top for the canary. Hooks and commands are Claude Code only: no git guard, physicist source allowlist, handoff loading, or slash commands. The copy mentions things those agents lack (hook approval for git, the `judge` and `physicist` agents, the review skill): adapt or drop those lines.
+Copy `AGENTS.md` into your project root, or into the agent's global rules file. Add `User name: <your name>` at the top for the canary. Hooks and commands are Claude Code only: no git guard, physicist source allowlist, handoff loading, or slash commands. The copy mentions things those agents lack (hook approval for git, the `progress` tool, the `judge` and `physicist` agents, the review skill): adapt or drop those lines.
 
 Don't copy `AGENTS.md` into a project that also uses the plugin. Claude Code loads it too, doubling the rules and giving subagents the main-session sections.
 

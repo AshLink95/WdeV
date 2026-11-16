@@ -58,7 +58,7 @@ test('Details and Tasks each toggle their view, one open at a time', async ($, o
 
     await ui.press({ key: 'tasks' })
     expect(await ui.find({ type: 'Text', text: /^context/ })).toBeUndefined()
-    expect((await ui.find({ type: 'Text', text: /^#1/ }))?.text).toBe('#1 pending write tests')
+    expect((await ui.find({ type: 'Text', text: /^#1/ }))?.text).toBe('#1 0% pending write tests')
 
     await ui.press({ key: 'tasks' })
     expect(await ui.find({ type: 'Text', text: /^#1/ })).toBeUndefined()
@@ -86,7 +86,7 @@ test('TaskCreate and TaskUpdate move the counter', async ($, on) => {
   const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
   expect((await ui.find({ key: 'tasks' }))?.text).toBe('Tasks 1/2 50%')
   await ui.press({ key: 'tasks' })
-  expect((await ui.find({ type: 'Text', text: /^#2/ }))?.text).toBe('#2 in_progress b2')
+  expect((await ui.find({ type: 'Text', text: /^#2/ }))?.text).toBe('#2 50% in_progress b2')
   expect(await ui.find({ type: 'Text', text: /^#3/ })).toBeUndefined()
   await ui.unmount()
 })
@@ -128,9 +128,48 @@ test('spawned agents show with their completion, ended by their last turn', asyn
     const ui = await $.ui.mount({ ...BAND, surface })
     expect((await ui.find({ key: 'agents' }))?.text).toBe('Agents 2/3 67%')
     await ui.press({ key: 'agents' })
-    expect((await ui.find({ type: 'Text', text: /hooks$/ }))?.text).toBe('Explore completed audit hooks')
-    expect((await ui.find({ type: 'Text', text: /skills$/ }))?.text).toBe('general-purpose killed audit skills')
-    expect((await ui.find({ type: 'Text', text: /evals$/ }))?.text).toBe('general-purpose running audit evals')
+    expect((await ui.find({ type: 'Text', text: /hooks$/ }))?.text).toBe('Explore 100% completed audit hooks')
+    expect((await ui.find({ type: 'Text', text: /skills$/ }))?.text).toBe('general-purpose 0% killed audit skills')
+    expect((await ui.find({ type: 'Text', text: /evals$/ }))?.text).toBe('general-purpose 0% running audit evals')
+    await ui.press({ key: 'agents' })
+    await ui.unmount()
+  }
+})
+
+test('reported progress shows per task and per agent; an agent without reports goes by its own tasks', async ($, on) => {
+  let task = 0
+  on('session.usage', () => ({ value: USAGE }))
+  on('session.measure', (_, e) => ({ changed: e.changed }))
+  on('agent.spawn', (_, e) => ({ model: 'opus', agentId: e.description }))
+  on('tool.call', ($, e) =>
+    e.tool === 'TaskCreate'
+      ? { result: { task: { id: String(++task), subject: e.subject } } }
+      : { result: { success: true, taskId: '', updatedFields: [] } },
+  )
+  await $.session.measure({ ...USAGE, changed: ['context'] })
+  const spawn = { prompt: 'p', tool_use_id: 'u', provider: { plugin: 'engine', tier: 'builtin' }, parentModel: 'opus', background: true, fork: false } as const
+  const progress = (input: { percent: number; taskId?: string; agentId?: string }) =>
+    $.tool.call({ tool: 'mcp__wdev__progress', ...input } as never)
+
+  await $.tool.call({ tool: 'TaskCreate', subject: 'main task', description: '' })
+  await progress({ percent: 80, taskId: '1' })
+  await $.agent.spawn({ ...spawn, description: 'reporter', subagentType: 'Explore' })
+  await progress({ percent: 10, agentId: 'reporter' })
+  await $.agent.spawn({ ...spawn, description: 'lister', subagentType: 'Explore' })
+  await $.tool.call({ tool: 'TaskCreate', subject: 'x', description: '', agentId: 'lister' } as never)
+  await $.tool.call({ tool: 'TaskCreate', subject: 'y', description: '', agentId: 'lister' } as never)
+  await $.tool.call({ tool: 'TaskUpdate', taskId: '2', status: 'completed', agentId: 'lister' } as never)
+  const bad = await progress({ percent: 150, agentId: 'reporter' })
+  expect(bad.result).toBe('percent must be a number from 0 to 100')
+
+  for (const surface of SURFACES) {
+    const ui = await $.ui.mount({ ...BAND, surface })
+    expect((await ui.find({ key: 'tasks' }))?.text).toBe('Tasks 0/1 0%')
+    await ui.press({ key: 'tasks' })
+    expect((await ui.find({ type: 'Text', text: /^#1/ }))?.text).toBe('#1 80% pending main task')
+    await ui.press({ key: 'agents' })
+    expect((await ui.find({ type: 'Text', text: /reporter$/ }))?.text).toBe('Explore 10% running reporter')
+    expect((await ui.find({ type: 'Text', text: /lister$/ }))?.text).toBe('Explore 50% running lister')
     await ui.press({ key: 'agents' })
     await ui.unmount()
   }

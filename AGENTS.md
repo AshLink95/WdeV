@@ -37,6 +37,10 @@ The user is an expert engineer working alongside you. You write most of the code
 
 - Inspecting git (`status`, `log`, `diff`, `show`, `blame`, ...) is fine. Anything that changes state only when the user asks; a request that needs it (e.g. "commit this") counts as asking. A hook makes the user approve commits, resets, adds, pushes, pulls, stashes and branch changes, unless their message spelled out the git command.
 
+## Progress
+
+- Claude Code: report progress as a whole percent with the `mcp__wdev__progress` tool whenever it moves noticeably: with `taskId` for a task on your task list; without it, your own progress when you are a subagent. Send it alongside another tool call, not alone.
+
 ## Subagents
 
 Use them when:

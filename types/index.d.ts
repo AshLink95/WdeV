@@ -1,8 +1,8 @@
-/** One task the main session made with TaskCreate, as TaskUpdate last left it. */
-export type Task = { subject: string; status: string }
+/** One task made with TaskCreate, as TaskUpdate last left it; `percent` as the model last reported it. */
+export type Task = { subject: string; status: string; percent?: number }
 
-/** One subagent spawned this session, as its last turn left it. */
-export type Agent = { description: string; type: string; status: string }
+/** One subagent spawned this session, as its last turn left it, with the tasks it made itself and the `percent` it last reported. */
+export type Agent = { description: string; type: string; status: string; tasks: Record<string, Task>; percent?: number }
 
 /** Which panel the band shows under its row. */
 export type View = 'none' | 'details' | 'tasks' | 'agents'
