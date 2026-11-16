@@ -29,10 +29,12 @@ function decide(input) {
 
   const toolInput = input.tool_input || {};
   if (input.tool_name === 'WebSearch') {
+    // The API rejects allowed_domains and blocked_domains together.
+    const { blocked_domains, ...rest } = toolInput;
     return { hookSpecificOutput: {
       hookEventName: 'PreToolUse',
       permissionDecision: 'allow',
-      updatedInput: { ...toolInput, allowed_domains: domains },
+      updatedInput: { ...rest, allowed_domains: domains },
     } };
   }
 

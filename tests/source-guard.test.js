@@ -18,6 +18,11 @@ test('physicist searches are pinned to the allowlist', () => {
   assert.deepStrictEqual(out.hookSpecificOutput.updatedInput, { query: 'Lindblad', allowed_domains: SOURCES.physicist });
 });
 
+test('caller blocked_domains is dropped when pinning searches', () => {
+  const out = decide({ agent_type: 'physicist', tool_name: 'WebSearch', tool_input: { query: 'Lindblad', blocked_domains: ['x.com'] } });
+  assert.deepStrictEqual(out.hookSpecificOutput.updatedInput, { query: 'Lindblad', allowed_domains: SOURCES.physicist });
+});
+
 test('other agents are untouched', () => {
   assert.strictEqual(fetch(undefined, 'https://en.wikipedia.org/'), null);
   assert.strictEqual(fetch('Explore', 'https://en.wikipedia.org/'), null);
