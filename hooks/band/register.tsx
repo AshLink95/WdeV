@@ -13,6 +13,19 @@ const LIMITS: Record<string, string> = { five_hour: '5h', seven_day: '7d' }
 /** A rate-limit kind as the band names it: `5h`, `7d`, or the kind as-is. */
 const limitName = (kind: string) => LIMITS[kind] ?? kind
 
+/** How often an idle band reads usage again, which keeps its countdowns moving. */
+const TICK_MS = 60_000
+
+/** The time left from `time` until `resetsAt`, to the minute: `3d8h`, `2h14m`, `14m`, or `<1m`. */
+const until = (resetsAt: string, time: number) => {
+  const minutes = Math.floor((Date.parse(resetsAt) - time) / 60_000)
+  if (minutes < 1) return '<1m'
+  const days = Math.floor(minutes / 1440)
+  const hours = Math.floor(minutes / 60) % 24
+  if (days > 0) return `${days}d${hours}h`
+  return hours > 0 ? `${hours}h${minutes % 60}m` : `${minutes}m`
+}
+
 /** The status an agent's ended turn leaves it in, by the turn's reason; any other reason is `failed`. */
 const ENDED: Record<string, string> = { answer: 'completed', aborted: 'killed' }
 
@@ -52,12 +65,12 @@ const updated = (list: TaskList, id: string, change: { subject?: string; status?
 /** Tokens in thousands: `84k`. */
 const k = (tokens: number) => `${Math.round(tokens / 1000)}k`
 
-/** The compact row's figures, each left out when the engine has none. */
-const summary = ({ context, rateLimits }: SessionUsage) =>
+/** The compact row's figures, each left out when the engine has none; a limit goes by its time to reset, else its name. */
+const summary = ({ context, rateLimits }: SessionUsage, time: number) =>
   [
     context.percent !== undefined && `ctx ${context.percent}%`,
     context.tokens !== undefined && `${k(context.tokens)} tok`,
-    ...rateLimits.map(limit => `${limitName(limit.kind)} ${limit.percentUsed}%`),
+    ...rateLimits.map(limit => `${limit.resetsAt ? until(limit.resetsAt, time) : limitName(limit.kind)} ${limit.percentUsed}%`),
   ]
     .filter(Boolean)
     .join(' · ')
@@ -101,6 +114,7 @@ export const register: Register = on => {
       },
       isDeferred: false,
     })
+    $.clock.every(TICK_MS, () => readUsage($))
 
     return started
   })
@@ -177,6 +191,7 @@ export const register: Register = on => {
     const list = Object.entries(await read($, tasks))
     const spawned = Object.entries(await read($, agents))
     const open = await read($, view)
+    const time = await $.clock.now()
     const done = list.filter(([, task]) => task.status === 'completed').length
     const ended = spawned.filter(([, agent]) => agent.status !== 'running').length
     const toggle = (to: View) => () => update($, view, v => (v === to ? 'none' : to))
@@ -199,7 +214,7 @@ export const register: Register = on => {
           <Text>
             <Text color="suggestion">●</Text> wdev
           </Text>
-          <Text dimColor>{summary(now)}</Text>
+          <Text dimColor>{summary(now, time)}</Text>
           <Box flexGrow={1} />
           <Button key="review" plain label="Review" onPress={() => $.command.run({ command: 'wdev:review', args: '' })} />
           {list.length > 0 && <Button key="tasks" plain label={progress('Tasks', done, list.length)} onPress={toggle('tasks')} />}

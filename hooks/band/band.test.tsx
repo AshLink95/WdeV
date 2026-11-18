@@ -1,4 +1,4 @@
-import { expect, test } from 'claude-code/testing'
+import { expect, mock, test } from 'claude-code/testing'
 import type { SessionUsage } from 'claude-code'
 
 const BAND = {
@@ -20,6 +20,7 @@ const USAGE: SessionUsage = {
 const SURFACES = ['terminal', 'desktop'] as const
 
 test('the row shows usage once read, and the engine draws until then', async ($, on) => {
+  mock.clock(on, { now: Date.parse('2026-11-16T15:46:00Z') })
   on('session.usage', () => ({ value: USAGE }))
   on('session.start', (_, e) => ({ cwd: e.cwd }))
   on('ui.render', ($, e) => {
@@ -34,7 +35,7 @@ test('the row shows usage once read, and the engine draws until then', async ($,
   await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
   for (const surface of SURFACES) {
     const ui = await $.ui.mount({ ...BAND, surface })
-    expect((await ui.find({ type: 'Text', text: /ctx/ }))?.text).toBe('ctx 42% · 84k tok · 5h 31% · 7d 12%')
+    expect((await ui.find({ type: 'Text', text: /ctx/ }))?.text).toBe('ctx 42% · 84k tok · 2h14m 31% · 7d 12%')
     expect(await ui.find({ key: 'review' })).toBeDefined()
     expect(await ui.find({ key: 'details' })).toBeDefined()
     expect(await ui.find({ key: 'tasks' })).toBeUndefined()
@@ -42,7 +43,29 @@ test('the row shows usage once read, and the engine draws until then', async ($,
   }
 })
 
+test('the row counts down to each reset while idle', async ($, on) => {
+  const clock = mock.clock(on, { now: Date.parse('2026-11-16T15:46:00Z') })
+  const rateLimits = [
+    { kind: 'five_hour', percentUsed: 31, resetsAt: '2026-11-16T18:00:00Z' },
+    { kind: 'seven_day', percentUsed: 12, resetsAt: '2026-11-20T00:00:00Z' },
+  ]
+  on('session.usage', () => ({ value: { ...USAGE, rateLimits } }))
+  on('tool.register', (_, e) => ({ value: { tool: e.name } }))
+  on('session.start', (_, e) => ({ cwd: e.cwd }))
+  await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
+
+  const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
+  const row = async () => (await ui.find({ type: 'Text', text: /ctx/ }))?.text
+  expect(await row()).toBe('ctx 42% · 84k tok · 2h14m 31% · 3d8h 12%')
+  await clock.advance(2 * 60 * 60_000)
+  expect(await row()).toBe('ctx 42% · 84k tok · 14m 31% · 3d6h 12%')
+  await clock.advance(14 * 60_000)
+  expect(await row()).toBe('ctx 42% · 84k tok · <1m 31% · 3d6h 12%')
+  await ui.unmount()
+})
+
 test('Details and Tasks each toggle their view, one open at a time', async ($, on) => {
+  mock.clock(on)
   on('session.usage', () => ({ value: USAGE }))
   on('tool.call', () => ({ result: { task: { id: '1', subject: 'write tests' } } }))
   on('session.measure', (_, e) => ({ changed: e.changed }))
@@ -67,6 +90,7 @@ test('Details and Tasks each toggle their view, one open at a time', async ($, o
 })
 
 test('TaskCreate and TaskUpdate move the counter', async ($, on) => {
+  mock.clock(on)
   let id = 0
   on('session.usage', () => ({ value: USAGE }))
   on('tool.call', ($, e) =>
@@ -92,6 +116,7 @@ test('TaskCreate and TaskUpdate move the counter', async ($, on) => {
 })
 
 test('a TaskCreate result without a task leaves the list alone', async ($, on) => {
+  mock.clock(on)
   on('session.usage', () => ({ value: USAGE }))
   on('tool.call', () => ({ result: {} as never }))
   on('session.measure', (_, e) => ({ changed: e.changed }))
@@ -105,6 +130,7 @@ test('a TaskCreate result without a task leaves the list alone', async ($, on) =
 })
 
 test('spawned agents show with their completion, ended by their last turn', async ($, on) => {
+  mock.clock(on)
   let id = 0
   on('session.usage', () => ({ value: USAGE }))
   on('agent.spawn', () => ({ model: 'opus', agentId: `a${++id}` }))
@@ -137,6 +163,7 @@ test('spawned agents show with their completion, ended by their last turn', asyn
 })
 
 test('reported progress shows per task and per agent; an agent without reports goes by its own tasks', async ($, on) => {
+  mock.clock(on)
   let task = 0
   on('session.usage', () => ({ value: USAGE }))
   on('session.measure', (_, e) => ({ changed: e.changed }))
