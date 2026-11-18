@@ -1,6 +1,6 @@
 {
   "name": "wdev",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Expert-peer dev mode: rules, plan hook, git guard, usage bar, /wdev:handoff, /wdev:delegate, /wdev:review panel, judge and physicist agents.",
   "types": "./types/index.d.ts",
   "author": {
