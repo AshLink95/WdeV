@@ -57,7 +57,7 @@ Canary name, first found wins:
 2. `name` in `~/.config/wdev/config.json` (`$XDG_CONFIG_HOME/wdev/config.json` if set)
 3. `git config user.name`
 
-Add `.wdev/` to your projects' `.gitignore`.
+Add `.wdev/` to your projects' `.gitignore`
 
 ## Develop
 
